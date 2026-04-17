@@ -7,7 +7,17 @@ app = Flask(__name__)
 
 # 数据库路径
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'kitchen.db')
+
+# 【核心修改】优先读取 Render 后台的 DATABASE_URL，如果没有（比如在本地运行）则用 SQLite
+db_url = os.environ.get('DATABASE_URL')
+
+if db_url:
+    # 兼容性处理：SQLAlchemy 要求必须是 postgresql:// 开头
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'kitchen.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
