@@ -1,0 +1,64 @@
+<div id="view-profile" class="main-view">
+    
+    <div id="unlogged-box" style="padding: 50px 30px; text-align: center;">
+        <div style="font-size: 60px; margin-bottom: 15px;">🍳</div>
+        
+        <h2 style="font-size: 20px; color: #333; margin-bottom: 40px; font-weight: 600;">
+            欢迎光临 <span style="color: #fbc531;">Scarlett的小厨房～</span>
+        </h2>
+        
+        <div class="auth-box" style="background: transparent; padding: 0;">
+            <div style="margin-bottom: 25px;">
+                <input type="text" id="auth-username" class="auth-input" placeholder="用户名 (必填)">
+                <input type="text" id="auth-nickname" class="auth-input" placeholder="昵称 (可选，默认同用户名)">
+                <input type="password" id="auth-password" class="auth-input" placeholder="密码">
+            </div>
+            
+            <button class="primary-btn" onclick="handleLogin()">登录</button>
+            <button class="outline-btn" onclick="handleRegister()">新食客注册</button>
+        </div>
+    </div>
+
+    <div id="logged-box" style="display: none;">
+        <div class="profile-header-area">
+            <div class="profile-avatar">👧</div>
+            <div class="profile-meta">
+                <div class="profile-name">
+                    <span id="profile-display-name">加载中...</span>
+                    <span onclick="toggleEditInfo()" style="color:#fbc531; font-size:13px; font-weight:normal; cursor:pointer;">编辑资料</span>
+                </div>
+                <div id="profile-role" style="color: #999; font-size: 12px; margin-top: 4px;">尊贵食客</div>
+            </div>
+        </div>
+
+        <div id="edit-info-box" style="display:none; padding: 25px 20px; background: #fff; margin: 0 15px 15px; border-radius: 20px; border: 1px solid #eee; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+    
+    <div style="display: flex; align-items: center; margin-bottom: 18px;">
+        <span style="width: 70px; color: #999; font-size: 14px; flex-shrink: 0;">用户名</span>
+        <div id="display-username" style="color: #bbb; font-size: 15px; flex: 1; padding: 0 10px; font-family: monospace;">
+            </div>
+    </div>
+
+    <div style="display: flex; align-items: center; margin-bottom: 25px;">
+        <span style="width: 70px; color: #333; font-size: 14px; flex-shrink: 0; font-weight: 500;">新昵称</span>
+        <input type="text" id="new-nickname" class="auth-input" 
+               style="flex: 1; margin-bottom: 0;" 
+               placeholder="想个好听的名字">
+    </div>
+
+    <div style="width: 100%; padding: 0;">
+        <button class="primary-btn" 
+                style="width: 100%; margin: 0; display: block;" 
+                onclick="updateNickname()">
+            保存修改
+        </button>
+    </div>
+</div>
+
+        <div style="padding: 15px;">
+            <div style="font-weight:bold; margin-bottom:12px; color: #333;">❤️ 我的收藏</div>
+            <div id="my-favorites-list" class="fav-list-box">暂无收藏菜品</div>
+            <button class="outline-btn" style="color:#ff7675; border-color:#ff7675; margin-top:50px;" onclick="handleLogout()">登出账号</button>
+        </div>
+    </div>
+</div>

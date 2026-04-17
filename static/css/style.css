@@ -1,0 +1,518 @@
+/* ================= 1. 核心重置与全局修复 (防缩放) ================= */
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+}
+
+/* 彻底禁止点击时的缩放行为和蓝框反馈 */
+button, .counter-btn, .add-btn, .nav-item, .sidebar-item {
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: pointer;
+}
+
+/* 强制输入框字号为16px，防止iOS聚焦时自动放大页面 */
+input { font-size: 16px !important; }
+
+body { 
+    height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    overflow: hidden; 
+    background-color: #f7f8fa; 
+}
+
+/* ================= 2. 头部 Header ================= */
+.header { 
+    background-color: #fbc531; 
+    padding: 45px 20px 20px 20px; 
+    display: flex; 
+    align-items: center; 
+    flex-shrink: 0; 
+}
+.header img { 
+    width: 45px; 
+    height: 45px; 
+    border-radius: 50%; 
+    margin-right: 12px; 
+    border: 2px solid #fff; 
+    object-fit: cover; 
+    background: #eee;
+}
+.header h1 { font-size: 18px; color: #333; }
+
+/* ================= 3. 主体菜单布局 ================= */
+.main-container { 
+    display: flex; 
+    flex: 1; 
+    overflow: hidden; 
+    background-color: #fff; 
+}
+
+/* 左侧边栏 */
+.sidebar { 
+    width: 85px; 
+    background-color: #f7f8fa; 
+    overflow-y: auto; 
+    flex-shrink: 0; 
+}
+.sidebar-item { 
+    padding: 22px 10px; 
+    font-size: 13px; 
+    color: #666; 
+    text-align: center; 
+    border-bottom: 1px solid #f0f0f0; 
+    transition: 0.2s;
+}
+.sidebar-item.active { 
+    background-color: #fff; 
+    font-weight: bold; 
+    color: #333; 
+    border-left: 4px solid #fbc531; 
+}
+
+/* 右侧菜品列表 */
+.dish-list { 
+    flex: 1; 
+    padding: 15px; 
+    padding-bottom: 120px; 
+    overflow-y: auto; 
+    -webkit-overflow-scrolling: touch; 
+}
+.dish-card { 
+    display: flex; 
+    margin-bottom: 25px; 
+    position: relative; 
+}
+.dish-img { 
+    width: 80px; 
+    height: 80px; 
+    border-radius: 12px; 
+    object-fit: cover; 
+    margin-right: 12px; 
+    background: #f0f0f0; 
+}
+.dish-info { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+    padding-right: 85px;
+}
+.dish-name { font-size: 16px; font-weight: bold; color: #333; }
+.dish-price { color: #ff4757; font-size: 15px; font-weight: bold; margin-top: 5px; }
+
+/* ================= 4. 交互组件与按钮 ================= */
+/* 统一按钮：解决登录页按钮长度不等问题 */
+.primary-btn, .outline-btn {
+    display: block;
+    width: 100%;
+    height: 48px;
+    line-height: 24px;
+    padding: 12px;
+    border-radius: 24px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+    transition: 0.2s;
+}
+
+.primary-btn {
+    display: block;
+    width: 100%;
+    height: 48px;
+    background-color: #fbc531;
+    color: #333;
+    border: none;
+    border-radius: 24px;
+    font-size: 16px;
+    font-weight: bold;
+    /* 关键：清除可能的浮动和偏移 */
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0 25px; /* 增加左右内边距，给文字留白 */
+    white-space: nowrap; /* 禁止文字折行 */
+    overflow: hidden;
+    text-overflow: ellipsis; /* 如果名字实在太长，显示省略号 */
+    text-align: center;
+    box-sizing: border-box; /* 确保 padding 不会把按钮挤歪 */
+}
+
+/* 如果你的外层容器用了 flex，强制按钮占满一行 */
+#edit-info-box {
+    display: flex;
+    flex-direction: column;
+}
+
+.outline-btn {
+    background-color: transparent;
+    border: 1.5px solid #eee;
+    color: #888;
+    margin-top: 12px;
+}
+
+.primary-btn:active, .outline-btn:active { transform: scale(0.96); opacity: 0.9; }
+
+/* 菜品计数器 */
+.add-btn { 
+    position: absolute; 
+    right: 0; 
+    bottom: 5px; 
+    background-color: #fbc531; 
+    color: #333; 
+    width: 28px; 
+    height: 28px; 
+    border-radius: 50%; 
+    text-align: center; 
+    line-height: 28px; 
+    font-weight: bold; 
+    font-size: 20px; 
+}
+.counter-group { 
+    position: absolute; 
+    right: 0; 
+    bottom: 5px; 
+    display: flex; 
+    align-items: center; 
+    background: #fff; 
+    border-radius: 20px; 
+    border: 1px solid #fbc531; 
+    padding: 2px; 
+}
+.counter-btn { 
+    width: 26px; 
+    height: 26px; 
+    border-radius: 50%; 
+    background: #fbc531; 
+    color: #333; 
+    border: none; 
+    font-weight: bold; 
+    font-size: 18px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+}
+.counter-btn.disabled { background: #eee !important; color: #ccc !important; }
+.counter-num { margin: 0 10px; font-size: 14px; font-weight: bold; min-width: 12px; text-align: center; }
+
+/* ================= 5. 详情页弹窗 (Modal) ================= */
+.modal-overlay { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0,0,0,0.7); 
+    z-index: 1000; 
+    display: none; 
+    justify-content: center; 
+    align-items: center; 
+    opacity: 0; 
+    transition: 0.2s; 
+}
+.modal-content { 
+    background: #fff; 
+    width: 88%; 
+    height: 72%; 
+    border-radius: 28px; 
+    overflow: hidden; 
+    display: flex; 
+    flex-direction: column; 
+    transform: translateY(20px); 
+    transition: 0.2s; 
+}
+.modal-img { 
+    width: 100%; 
+    height: 200px; 
+    object-fit: cover; 
+    background: #eee; 
+    flex-shrink: 0; 
+}
+.modal-body { 
+    flex: 1; 
+    padding: 24px; 
+    overflow-y: auto; 
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 详情页标题与收藏按钮 */
+.modal-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+#modal-title { font-size: 22px; font-weight: bold; color: #333; }
+
+.fav-btn {
+    font-size: 14px;
+    color: #666;
+    background: #f8f8f8;
+    border: 1px solid #eee;
+    padding: 6px 14px;
+    border-radius: 20px;
+    transition: 0.2s;
+}
+
+/* 详情页文字呼吸感 */
+.modal-section { margin-bottom: 25px; }
+.modal-section h4 {
+    font-size: 15px;
+    color: #fbc531;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+.modal-section p {
+    font-size: 15px;
+    color: #555;
+    line-height: 1.8;
+    white-space: pre-line;
+}
+
+.modal-footer { 
+    padding: 15px 24px 25px; 
+    border-top: 1px solid #f5f5f5; 
+    display: flex; 
+    justify-content: center; 
+    background: #fff;
+}
+
+/* ================= 6. 其他 UI 组件 ================= */
+/* Toast 提示 */
+#toast { 
+    position: fixed; 
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%); 
+    background: rgba(0,0,0,0.85); 
+    color: white; 
+    padding: 12px 24px; 
+    border-radius: 30px; 
+    font-size: 14px; 
+    z-index: 9999; 
+    display: none; 
+    animation: fadeIn 0.2s;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* 底部导航栏 */
+.bottom-nav { 
+    background-color: #fff; 
+    border-top: 1px solid #eee; 
+    display: flex; 
+    justify-content: space-around; 
+    align-items: center; 
+    flex-shrink: 0; 
+    z-index: 100; 
+    padding-top: 12px; 
+    padding-bottom: calc(30px + env(safe-area-inset-bottom)); 
+}
+.nav-item { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    font-size: 11px; 
+    color: #bbb; 
+    width: 33%; 
+}
+.nav-item.active { color: #fbc531; font-weight: bold; }
+.nav-icon { font-size: 22px; margin-bottom: 3px;}
+
+/* 个人中心卡片 */
+/* 个人中心头部区域：头像居左 */
+.profile-header-area { 
+    background: #fff; 
+    padding: 35px 20px; 
+    display: flex; 
+    align-items: center; /* 垂直居中 */
+    border-bottom: 1px solid #eee; 
+    margin-bottom: 10px;
+}
+
+.profile-avatar { 
+    width: 65px; 
+    height: 65px; 
+    border-radius: 50%; 
+    background: #fbc531; 
+    margin-right: 18px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    font-size: 32px; 
+    border: 3px solid #fff; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+    flex-shrink: 0;
+}
+
+.profile-meta { 
+    flex: 1; 
+    text-align: left; 
+}
+
+.profile-name { 
+    font-size: 22px; 
+    font-weight: bold; 
+    color: #333; 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; /* 把“编辑资料”挤到右边 */
+}
+/* --- 登录与资料编辑输入框专项优化 --- */
+.auth-input {
+    flex: 1;               /* 在 Flex 布局中自动撑满剩余空间 */
+    width: 100%;           /* 基础宽度 */
+    height: 45px;          /* 稍微减小高度，适配资料修改框 */
+    background-color: #f9f9f9; 
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 0 12px;
+    margin-bottom: 0;      /* 重要：将间距移交给外部容器，防止错位 */
+    font-size: 15px;
+    outline: none;
+    transition: all 0.2s;
+    box-sizing: border-box; /* 确保 padding 不会撑开宽度 */
+}
+
+/* 聚焦时的样式保持 */
+.auth-input:focus {
+    background-color: #fff;
+    border-color: #fbc531;
+    box-shadow: 0 0 0 3px rgba(251, 197, 49, 0.1);
+}
+
+/* 聚焦时变色，增加互动感 */
+.auth-input:focus {
+    background-color: #fff;
+    border-color: #fbc531;
+    box-shadow: 0 0 0 3px rgba(251, 197, 49, 0.1);
+}
+
+/* 收藏列表的样式优化 */
+.fav-list-box {
+    color:#666; 
+    font-size:14px; 
+    background:#fff; 
+    padding:20px; 
+    border-radius:15px; 
+    border:1px solid #eee; 
+    line-height: 1.6;
+    text-align: left;
+}
+.main-view { display: none; flex: 1; flex-direction: column; background-color: #f7f8fa; overflow-y: auto; }
+
+/* 悬浮购物车按钮 */
+.cart-fab { 
+    position: fixed; 
+    right: 20px; 
+    bottom: 110px; 
+    width: 55px; 
+    height: 55px; 
+    border-radius: 50%; 
+    background-color: #333; 
+    color: white; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    font-size: 26px; 
+    z-index: 99; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.cart-badge { 
+    position: absolute; 
+    top: -2px; 
+    right: -2px; 
+    background-color: #ff4757; 
+    color: white; 
+    font-size: 11px; 
+    font-weight: bold; 
+    width: 20px; 
+    height: 20px; 
+    border-radius: 50%; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    border: 2px solid #333;
+}
+
+/* 历史订单卡片 */
+.history-card { 
+    background: #fff; 
+    padding: 18px; 
+    border-radius: 16px; 
+    margin: 0 15px 15px; 
+    border: 1px solid #eee; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+/* 管理员编辑行样式 */
+.edit-item-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.edit-item-row input, .edit-item-row textarea {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+.edit-item-row textarea { height: 60px; font-size: 14px; }
+.step-num { color: #fbc531; font-weight: bold; width: 20px; }
+.del-btn { color: #ff7675; padding: 5px; font-size: 12px; }
+
+.add-detail-btn {
+    background: none;
+    border: 1px dashed #fbc531;
+    color: #fbc531;
+    padding: 8px;
+    width: 100%;
+    border-radius: 8px;
+    margin-top: 5px;
+    font-size: 13px;
+}
+
+/* 阅读模式样式优化 */
+.read-i-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f9f9f9;
+    font-size: 15px;
+}
+.q-tag { color: #999; font-size: 13px; }
+.read-s-row {
+    margin-bottom: 15px;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+/* Tips 专用 */
+.tips-input {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+    border: 1px solid #ffeaa7;
+    background: #fff;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* 详情页底部删除按钮微调 */
+.modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#edit-dish-name:focus {
+    outline: none;
+    border-color: #fbc531;
+    background: #fff9e6;
+}
