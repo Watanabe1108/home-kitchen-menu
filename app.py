@@ -162,6 +162,17 @@ def api_register():
     db.session.commit()
     return jsonify({"status": "success", "user": {"username": new_user.username, "nickname": new_user.nickname, "role": new_user.role, "favs": []}})
 
+@app.route('/api/update_profile', methods=['POST'])
+def update_profile():
+    data = request.json
+    user = User.query.filter_by(username=data['username']).first()
+    if user:
+        user.nickname = data['nickname']
+        db.session.commit()
+        return jsonify({"status": "success"})
+    return jsonify({"status": "fail"})
+
+
 # ================= 3. 启动入口 (必须在最后) =================
 
 if __name__ == '__main__':

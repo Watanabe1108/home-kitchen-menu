@@ -390,62 +390,71 @@ function toggleFavorite() {
 async function handleLogin() {
     let u = document.getElementById('auth-username').value.trim();
     let p = document.getElementById('auth-password').value;
-    if (!u || !p) return showToast("账号密码没填全");
+    if(!u || !p) return showToast("账号密码不能为空");
 
-    try {
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: u, password: p })
-        });
-        const result = await response.json();
-
-        if (result.status === 'success') {
-            currentUser = result.user.username;
-            dbUsers[currentUser] = result.user; // 更新前端内存状态
-            localStorage.setItem('scarlett_active_user', currentUser); // 记住登录状态
-            
-            applyLoginUI();
-            renderCategory(currentCuisineID); 
-            switchTab('view-menu', document.querySelectorAll('.nav-item')[0]);
-            showToast(currentUser === 'Scarlett' ? "登录成功，店长请进！" : "登录成功！");
-        } else {
-            showToast(result.msg);
-        }
-    } catch (e) {
-        showToast("网络开小差了，请重试");
+    const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+    });
+    const res = await response.json();
+    if(res.status === 'success') {
+        currentUser = res.user.username;
+        dbUsers[currentUser] = res.user; // 同步到内存
+        localStorage.setItem('scarlett_active_user', currentUser);
+        applyLoginUI();
+        showToast("欢迎回来！");
+        switchTab('view-menu', document.querySelectorAll('.nav-item')[0]);
+    } else {
+        showToast(res.msg);
     }
 }
 
-// 【修改】连云端的新版注册
 async function handleRegister() {
-    let u = document.getElementById('auth-username').value.trim(); 
-    let n = document.getElementById('auth-nickname').value.trim(); 
+    let u = document.getElementById('auth-username').value.trim();
+    let n = document.getElementById('auth-nickname').value.trim();
     let p = document.getElementById('auth-password').value;
-    if (!u || !p) return showToast("账号密码没填全"); 
+    if(!u || !p) return showToast("账号密码是必填的哦");
 
+    const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, nickname: n, password: p })
+    });
+    const res = await response.json();
+    if(res.status === 'success') {
+        currentUser = res.user.username;
+        dbUsers[currentUser] = res.user;
+        localStorage.setItem('scarlett_active_user', currentUser);
+        applyLoginUI();
+        showToast("注册成功！");
+        switchTab('view-menu', document.querySelectorAll('.nav-item')[0]);
+    } else {
+        showToast(res.msg);
+    }
+}
+
+async function updateNickname() {
+    const input = document.getElementById('new-nickname');
+    const newNick = input.value.trim();
+    if (!newNick) return showToast("昵称不能为空哦");
+
+    // 【关键】发送给后端保存到数据库
     try {
-        const response = await fetch('/api/register', {
+        const response = await fetch('/api/update_profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: u, nickname: n, password: p })
+            body: JSON.stringify({ username: currentUser, nickname: newNick })
         });
-        const result = await response.json();
-
-        if (result.status === 'success') {
-            currentUser = result.user.username;
-            dbUsers[currentUser] = result.user;
-            localStorage.setItem('scarlett_active_user', currentUser);
-            
+        
+        if (response.ok) {
+            dbUsers[currentUser].nickname = newNick; // 同步本地内存
             applyLoginUI();
-            renderCategory(currentCuisineID);
-            switchTab('view-menu', document.querySelectorAll('.nav-item')[0]);
-            showToast("注册成功，欢迎光临！");
-        } else {
-            showToast(result.msg); // 会提示“用户名已被占用”
+            toggleEditInfo();
+            showToast("✨ 云端资料已更新");
         }
     } catch (e) {
-        showToast("网络开小差了，请重试");
+        showToast("同步失败，请检查网络");
     }
 }
 
