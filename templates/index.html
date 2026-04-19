@@ -10,8 +10,9 @@
     <div id="toast">提示消息</div>
     <div id="app-wrapper" style="display: flex; height: 100vh; flex-direction: column;">
         <div class="header">
-            <img src="https://via.placeholder.com/100">
+            <img id="kitchen-logo" src="https://via.placeholder.com/100" onclick="triggerLogoUpload()" style="cursor: pointer;">
             <h1>Scarlett和Cris的小厨房</h1>
+            <input type="file" id="logo-input" accept="image/*" style="display: none;" onchange="handleLogoUpload(event)">
         </div>
         <div class="cart-fab" onclick="switchTab('view-cart', null)" id="cart-fab">
             🛒<div class="cart-badge" id="cart-badge">0</div>

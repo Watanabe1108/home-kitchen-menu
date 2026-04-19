@@ -11,6 +11,9 @@ let currentCuisineID = 'chinese';
 
 // 【修复】合并 window.onload，确保只加载一次
 window.onload = function() {
+    // 【新增】页面加载时顺便获取厨房 Logo
+    loadKitchenLogo(); 
+
     // 统一初始化：加载数据库 + 检查登录状态
     loadDishesFromServer(); 
     
@@ -594,6 +597,81 @@ async function updateNickname() {
             showToast("资料已更新");
         } else {
             showToast("保存失败，请重试");
+        }
+    } catch (e) {
+        showToast("同步失败，请检查网络");
+    }
+}
+
+// ================= 厨房头像 Logo 专属逻辑 =================
+
+// 1. 页面加载时自动获取云端 Logo
+async function loadKitchenLogo() {
+    try {
+        const res = await fetch('/api/get_logo');
+        const data = await res.json();
+        if (data.url) {
+            document.getElementById('kitchen-logo').src = data.url;
+        }
+    } catch (e) {
+        console.log("Logo加载失败，使用默认头像");
+    }
+}
+
+// 2. 点击头像的触发逻辑
+function triggerLogoUpload() {
+    const isAdmin = currentUser && dbUsers[currentUser] && dbUsers[currentUser].role === 'admin';
+    if (!isAdmin) return; // 只有店长能点
+
+    if (confirm("想要更换厨房头像吗？\n（点击‘取消’可选择移除当前头像）")) {
+        document.getElementById('logo-input').click();
+    } else {
+        if (confirm("确定要移除头像并恢复默认吗？")) {
+            saveKitchenLogo('https://via.placeholder.com/100');
+        }
+    }
+}
+
+// 3. 处理上传（复用压缩逻辑）
+function handleLogoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    showToast("头像处理中...");
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            // 压缩到 200px 见方就足够了，Logo 不需要大图
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 200;
+            const ctx = canvas.getContext('2d');
+            
+            // 填充白色背景，防止透明 PNG 变黑
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, 200, 200);
+            ctx.drawImage(img, 0, 0, 200, 200);
+            
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            saveKitchenLogo(compressedDataUrl);
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+// 4. 发送到后端保存
+async function saveKitchenLogo(url) {
+    try {
+        const res = await fetch('/api/set_logo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: url })
+        });
+        if (res.ok) {
+            document.getElementById('kitchen-logo').src = url;
+            showToast("厨房头像已更新");
         }
     } catch (e) {
         showToast("同步失败，请检查网络");

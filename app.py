@@ -55,6 +55,13 @@ class User(db.Model):
 with app.app_context():
     db.create_all()
 
+
+# 【新增】全局配置表，用来存头像、公告等
+class Config(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(50), unique=True)
+    value = db.Column(db.Text)
+
 # ================= 2. 路由接口 =================
 
 @app.route('/')
@@ -172,6 +179,22 @@ def update_profile():
         return jsonify({"status": "success"})
     return jsonify({"status": "fail"})
 
+# 全局配置表，用来存头像、公告等 在路由部分增加两个接口
+@app.route('/api/get_logo', methods=['GET'])
+def get_logo():
+    cfg = Config.query.filter_by(key='kitchen_logo').first()
+    return jsonify({"url": cfg.value if cfg else 'https://via.placeholder.com/100'})
+
+@app.route('/api/set_logo', methods=['POST'])
+def set_logo():
+    data = request.json
+    cfg = Config.query.filter_by(key='kitchen_logo').first()
+    if not cfg:
+        cfg = Config(key='kitchen_logo')
+        db.session.add(cfg)
+    cfg.value = data['url']
+    db.session.commit()
+    return jsonify({"status": "success"})
 
 # ================= 3. 启动入口 (必须在最后) =================
 
