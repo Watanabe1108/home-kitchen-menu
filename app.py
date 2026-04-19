@@ -42,6 +42,15 @@ class Order(db.Model):
     items = db.Column(db.Text)
     total = db.Column(db.String(50))
 
+# 【新增】云端用户表
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    nickname = db.Column(db.String(100))
+    password = db.Column(db.String(100))
+    role = db.Column(db.String(50), default='guest')
+    favs = db.Column(db.Text, default='[]') # 存收藏列表的 JSON 字符串
+
 # 统一初始化数据库（确保所有表都创建）
 with app.app_context():
     db.create_all()
@@ -120,6 +129,38 @@ def place_order():
     db.session.add(new_order)
     db.session.commit()
     return jsonify({"status": "success"})
+
+# 【新增】登录接口
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    data = request.json
+    # 如果是店长 Scarlett，且密码是 123，提供后门直接放行
+    if data['username'] == 'Scarlett' and data['password'] == '123':
+        return jsonify({"status": "success", "user": {"username": "Scarlett", "nickname": "店长Scarlett", "role": "admin", "favs": []}})
+    
+    # 查找云端数据库
+    user = User.query.filter_by(username=data['username'], password=data['password']).first()
+    if user:
+        return jsonify({"status": "success", "user": {"username": user.username, "nickname": user.nickname, "role": user.role, "favs": json.loads(user.favs)}})
+    
+    return jsonify({"status": "fail", "msg": "账号或密码不对哦"})
+
+# 【新增】注册接口
+@app.route('/api/register', methods=['POST'])
+def api_register():
+    data = request.json
+    if User.query.filter_by(username=data['username']).first() or data['username'] == 'Scarlett':
+        return jsonify({"status": "fail", "msg": "用户名已被占用"})
+    
+    new_user = User(
+        username=data['username'], 
+        nickname=data.get('nickname', data['username']), 
+        password=data['password'], 
+        role='guest'
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"status": "success", "user": {"username": new_user.username, "nickname": new_user.nickname, "role": new_user.role, "favs": []}})
 
 # ================= 3. 启动入口 (必须在最后) =================
 

@@ -386,42 +386,67 @@ function toggleFavorite() {
     localStorage.setItem('scarlett_db_users', JSON.stringify(dbUsers)); openDishDetails(currentDetailingDish); renderFavs();
 }
 
-function handleLogin() {
+// 【修改】连云端的新版登录
+async function handleLogin() {
     let u = document.getElementById('auth-username').value.trim();
     let p = document.getElementById('auth-password').value;
-    
-    if (u === 'Scarlett' && p === '123') {
-        if (!dbUsers[u]) {
-            dbUsers[u] = { password: '123', role: 'admin', nickname: '店长Scarlett', favs: [] };
-            localStorage.setItem('scarlett_db_users', JSON.stringify(dbUsers));
-        }
-    }
+    if (!u || !p) return showToast("账号密码没填全");
 
-    if (dbUsers[u] && dbUsers[u].password === p) {
-        currentUser = u;
-        localStorage.setItem('scarlett_active_user', u);
-        applyLoginUI();
-        renderCategory(currentCuisineID); 
-        switchTab('view-menu', document.querySelectorAll('.nav-item')[0]);
-        showToast("登录成功，店长请进！");
-    } else {
-        showToast("账号密码不对哦");
+    try {
+        const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: u, password: p })
+        });
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            currentUser = result.user.username;
+            dbUsers[currentUser] = result.user; // 更新前端内存状态
+            localStorage.setItem('scarlett_active_user', currentUser); // 记住登录状态
+            
+            applyLoginUI();
+            renderCategory(currentCuisineID); 
+            switchTab('view-menu', document.querySelectorAll('.nav-item')[0]);
+            showToast(currentUser === 'Scarlett' ? "登录成功，店长请进！" : "登录成功！");
+        } else {
+            showToast(result.msg);
+        }
+    } catch (e) {
+        showToast("网络开小差了，请重试");
     }
 }
 
-function handleRegister() {
+// 【修改】连云端的新版注册
+async function handleRegister() {
     let u = document.getElementById('auth-username').value.trim(); 
     let n = document.getElementById('auth-nickname').value.trim(); 
     let p = document.getElementById('auth-password').value;
-    if (!u || !p) return showToast("没填全"); 
-    if (dbUsers[u]) return showToast("已占用");
-    dbUsers[u] = { password: p, role: 'guest', nickname: n || u, favs: [] };
-    localStorage.setItem('scarlett_db_users', JSON.stringify(dbUsers)); 
-    currentUser = u; 
-    localStorage.setItem('scarlett_active_user', u); 
-    applyLoginUI();
-    renderCategory(currentCuisineID);
-    switchTab('view-menu', document.querySelectorAll('.nav-item')[0]);
+    if (!u || !p) return showToast("账号密码没填全"); 
+
+    try {
+        const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: u, nickname: n, password: p })
+        });
+        const result = await response.json();
+
+        if (result.status === 'success') {
+            currentUser = result.user.username;
+            dbUsers[currentUser] = result.user;
+            localStorage.setItem('scarlett_active_user', currentUser);
+            
+            applyLoginUI();
+            renderCategory(currentCuisineID);
+            switchTab('view-menu', document.querySelectorAll('.nav-item')[0]);
+            showToast("注册成功，欢迎光临！");
+        } else {
+            showToast(result.msg); // 会提示“用户名已被占用”
+        }
+    } catch (e) {
+        showToast("网络开小差了，请重试");
+    }
 }
 
 function applyLoginUI() {
