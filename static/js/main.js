@@ -434,30 +434,6 @@ async function handleRegister() {
     }
 }
 
-async function updateNickname() {
-    const input = document.getElementById('new-nickname');
-    const newNick = input.value.trim();
-    if (!newNick) return showToast("昵称不能为空哦");
-
-    // 【关键】发送给后端保存到数据库
-    try {
-        const response = await fetch('/api/update_profile', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: currentUser, nickname: newNick })
-        });
-        
-        if (response.ok) {
-            dbUsers[currentUser].nickname = newNick; // 同步本地内存
-            applyLoginUI();
-            toggleEditInfo();
-            showToast("✨ 云端资料已更新");
-        }
-    } catch (e) {
-        showToast("同步失败，请检查网络");
-    }
-}
-
 function applyLoginUI() {
     let u = dbUsers[currentUser]; 
     if(!u) return;
@@ -589,24 +565,37 @@ function toggleEditInfo() {
     }
 }
 
-// 【补全】真正执行昵称修改的函数
-function updateNickname() {
+// ================= 真正的更新昵称逻辑 =================
+async function updateNickname() {
     const input = document.getElementById('new-nickname');
     if (!input) return;
-    
+
     const newNick = input.value.trim();
     if (!newNick) return showToast("昵称不能为空哦");
 
-    // 1. 更新内存数据
-    dbUsers[currentUser].nickname = newNick;
-    
-    // 2. 同步到本地存储（用户信息目前仍存在本地，方便手机端快速读取）
-    localStorage.setItem('scarlett_db_users', JSON.stringify(dbUsers));
-    
-    // 3. 刷新 UI 显示
-    applyLoginUI();
-    
-    // 4. 收起编辑框并提示
-    toggleEditInfo();
-    showToast("✨ 资料已更新");
+    try {
+        // 1. 发送给云端数据库保存
+        const response = await fetch('/api/update_profile', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUser, nickname: newNick })
+        });
+        
+        if (response.ok) {
+            // 2. 更新前端内存
+            dbUsers[currentUser].nickname = newNick; 
+            
+            // 3. 同时更新本地缓存（防止用户刷新页面那半秒钟显示的还是旧名字）
+            localStorage.setItem('scarlett_db_users', JSON.stringify(dbUsers));
+            
+            // 4. 更新界面并收起弹窗
+            applyLoginUI();
+            toggleEditInfo();
+            showToast("资料已更新");
+        } else {
+            showToast("保存失败，请重试");
+        }
+    } catch (e) {
+        showToast("同步失败，请检查网络");
+    }
 }
