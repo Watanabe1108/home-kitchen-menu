@@ -189,15 +189,62 @@ function removeDetailItem(type, idx) {
     renderEditMode(dish);
 }
 
+// ================= 全新的图片上传与压缩逻辑 =================
 function handleImageUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
-    if (file.size > 1024 * 1024) return showToast("图片太大（限1MB）");
+    
+    // 移除了之前 1MB 的限制，因为我们现在会自动压缩！
+    showToast("图片压缩中，请稍候...");
+
     const reader = new FileReader();
     reader.onload = function(e) {
-        getActiveDishObject().img = e.target.result;
-        document.getElementById('modal-img').src = e.target.result;
-        showToast("已预览，点保存生效");
+        const img = new Image();
+        img.onload = function() {
+            // 1. 设定图片最大尺寸 (800px 对于手机点餐界面已经非常高清了)
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 800;
+            let width = img.width;
+            let height = img.height;
+
+            // 2. 等比例缩小尺寸
+            if (width > height) {
+                if (width > MAX_WIDTH) {
+                    height = Math.round(height * (MAX_WIDTH / width));
+                    width = MAX_WIDTH;
+                }
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width = Math.round(width * (MAX_HEIGHT / height));
+                    height = MAX_HEIGHT;
+                }
+            }
+
+            // 3. 创建画板并绘制缩小后的图片
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            
+            // 填充白色背景（防止原图是透明底的 PNG 变成黑色背景）
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // 4. 核心魔法：导出为 JPEG 格式，画质压缩为 0.7
+            // 0.7 是个黄金比例，通常能把 2-3MB 的照片压到 100kb-200kb 左右
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+
+            // 5. 更新数据和 UI
+            getActiveDishObject().img = compressedDataUrl;
+            document.getElementById('modal-img').src = compressedDataUrl;
+            showToast("✅ 图片已压缩并预览！点保存生效");
+            
+            // 可选：在控制台打印压缩后的体积，让你心里有数
+            const sizeInKB = Math.round((compressedDataUrl.length * (3/4)) / 1024);
+            console.log(`压缩后图片大小约为: ${sizeInKB} KB`);
+        };
+        img.src = e.target.result;
     };
     reader.readAsDataURL(file);
 }
