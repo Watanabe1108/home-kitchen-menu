@@ -516,3 +516,30 @@ body {
     border-color: #fbc531;
     background: #fff9e6;
 }
+
+/* ================= 7. 弹窗关闭小叉 ================= */
+.close-icon {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 20; /* 确保层级高于图片和黑色遮罩 */
+    width: 32px;
+    height: 32px;
+    background-color: rgba(0, 0, 0, 0.4); 
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom: 3px; /* 微调叉号，使其垂直居中 */
+    cursor: pointer;
+    backdrop-filter: blur(4px); /* 高级毛玻璃效果 */
+    transition: all 0.2s;
+}
+
+.close-icon:active {
+    transform: scale(0.9);
+    background-color: rgba(0, 0, 0, 0.6);
+}

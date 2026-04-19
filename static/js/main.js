@@ -135,7 +135,9 @@ function renderReadMode(dish) {
     } else {
         tipsArea.style.display = 'none';
     }
-    document.querySelector('.modal-footer').innerHTML = `<button class="primary-btn" style="width: 90%;" onclick="closeDishDetails()">返回菜单</button>`;
+    const footer = document.querySelector('.modal-footer');
+    footer.style.display = 'none'; // 顾客浏览时，彻底隐藏底部栏
+    footer.innerHTML = '';
 }
 
 function renderEditMode(dish) {
@@ -160,7 +162,9 @@ function renderEditMode(dish) {
     tipsArea.style.display = 'block';
     tipsArea.innerHTML = `<h4>💡 小Tips</h4><textarea style="width:100%; height:60px;" oninput="updateTipsData(this.value)">${dish.tips || ''}</textarea>`;
     
-    document.querySelector('.modal-footer').innerHTML = `<button class="outline-btn" style="width:30%; margin:0; border-color:#ff7675; color:#ff7675;" onclick="deleteDish()">删除</button><button class="primary-btn" style="width:65%; margin:0;" onclick="saveAndClose()">保存修改</button>`;
+    const footer = document.querySelector('.modal-footer');
+    footer.style.display = 'flex'; // 店长编辑时，恢复显示底部栏
+    footer.innerHTML = `<button class="outline-btn" style="width:30%; margin:0; border-color:#ff7675; color:#ff7675;" onclick="deleteDish()">删除</button><button class="primary-btn" style="width:65%; margin:0;" onclick="saveAndClose()">保存修改</button>`;
 }
 
 // ================= 4. 工具函数 =================
