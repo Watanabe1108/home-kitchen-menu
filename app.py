@@ -51,16 +51,17 @@ class User(db.Model):
     role = db.Column(db.String(50), default='guest')
     favs = db.Column(db.Text, default='[]') # 存收藏列表的 JSON 字符串
 
-# 统一初始化数据库（确保所有表都创建）
-with app.app_context():
-    db.create_all()
-
-
 # 【新增】全局配置表，用来存头像、公告等
 class Config(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(50), unique=True)
     value = db.Column(db.Text)
+
+
+# 统一初始化数据库（确保所有表都创建）
+with app.app_context():
+    db.create_all()
+
 
 # ================= 2. 路由接口 =================
 
